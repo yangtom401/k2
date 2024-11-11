@@ -1,9 +1,9 @@
 name: Build OpenWrt
 
-on:
+on: 
   push:
-    branches:
-      - main
+    branches: 
+      - master
 
 jobs:
   build:
@@ -23,7 +23,8 @@ jobs:
           /usr/share/dotnet \
           /etc/mysql \
           /etc/php
-        sudo -E apt-get -y purge \
+        sudo -E apt-get update
+        sudo -E apt-get -y purge --ignore-missing \
           azure-cli \
           ghc* \
           zulu* \
@@ -36,9 +37,7 @@ jobs:
           openjdk* \
           mysql* \
           php*
-        sudo -E apt-get update
-        sudo -E apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler
-        sudo -E apt-get -y autoremove --purge
+        sudo -E apt-get -y autoremove --purge --ignore-missing
         sudo -E apt-get clean
 
     - name: Clone source code
@@ -51,7 +50,6 @@ jobs:
       run: |
         git clone https://github.com/honwen/luci-app-aliddns  openwrt/package/luci-app-aliddns
         git clone https://github.com/zxlhhyccc/luci-app-serverchan  openwrt/package/luci-app-serverchan
-        # git clone https://github.com/Kinodi/luci-theme-atmaterial  openwrt/package/luci-theme-atmaterial
         git clone https://github.com/jerrykuku/luci-theme-argon  openwrt/package/luci-theme-argon
         git clone https://github.com/Lienol/openwrt-package  openwrt/package/openwrt-package
 
@@ -123,6 +121,10 @@ jobs:
         cd openwrt
         echo -e "$(nproc) thread build."
         make -j$(nproc) V=s
+        if [ $? -ne 0 ]; then
+          echo "Build failed, see the error log above."
+          exit 1
+        fi
 
     - name: Assemble artifact
       run: |
